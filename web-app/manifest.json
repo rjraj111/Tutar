@@ -1,0 +1,10 @@
+{
+  "name": "TutarBD — Subscription Tuition Platform",
+  "short_name": "TutarBD",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#4f46e5",
+  "description": "Subscription-based Tuition & Tutor Marketplace for Guardians and Tutors in Bangladesh"
+}
+

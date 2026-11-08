@@ -1,0 +1,17 @@
+# SQLite database & Python cache
+*.db
+__pycache__/
+*.pyc
+
+# Flutter build & tooling artifacts
+flutter_app/.dart_tool/
+flutter_app/build/
+flutter_app/.flutter-plugins
+flutter_app/.flutter-plugins-dependencies
+flutter_app/.packages
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

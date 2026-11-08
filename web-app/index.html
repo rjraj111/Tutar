@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TutarBD — Subscription-Based Tuition & Tutor Platform</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Top Demo & Role Switcher Bar -->
+  <div class="demo-bar">
+    <div class="container demo-bar-inner">
+      <div class="demo-badge-group">
+        <span class="pulse-dot"></span>
+        <span class="demo-label">লাইভ ডেমো মোড (Role Switcher):</span>
+      </div>
+      <div class="role-switcher" id="roleSwitcher">
+        <button class="role-btn active" data-role="tutor" onclick="switchRole('tutor')">
+          👨‍🏫 টিউটর ভিউ (Tutor)
+        </button>
+        <button class="role-btn" data-role="guardian" onclick="switchRole('guardian')">
+          👪 গার্ডিয়ান / স্টুডেন্ট ভিউ (Guardian)
+        </button>
+        <button class="role-btn" data-role="admin" onclick="switchRole('admin')">
+          🛡️ অ্যাডমিন প্যানেল (Admin)
+          <span class="badge-count" id="adminPendingBadge">1</span>
+        </button>
+      </div>
+      <div class="quick-sub-toggle">
+        <button class="btn-xs" id="quickSubToggleBtn" onclick="toggleQuickSubscription()">
+          🔄 সাবস্ক্রিপশন স্ট্যাটাস টগল করুন
+        </button>
+        <button class="btn-xs btn-outline-light" onclick="openAuthModal()">
+          🔑 OTP লগইন / রেজিস্ট্রেশন
+        </button>
+        <button class="btn-xs btn-outline-light" onclick="toggleMobileFrame()">
+          📱 Mobile App View
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wrapper for Desktop or Mobile App Frame Preview -->
+  <div id="appViewportWrapper">
+    <!-- Main Navigation Header -->
+    <header class="navbar">
+      <div class="container navbar-inner">
+        <div class="brand" onclick="navigateView('tuition-board')">
+          <div class="brand-logo">🎓</div>
+          <div>
+            <span class="brand-name">Tutar<span>BD</span></span>
+            <span class="brand-tag">Smart Tuition Marketplace</span>
+          </div>
+        </div>
+
+        <nav class="nav-links" id="mainNavLinks">
+          <!-- Dynamically populated based on active role -->
+        </nav>
+
+        <div class="user-status-pill" id="userStatusPill">
+          <!-- Dynamically shows current role + subscription badge -->
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="container main-content">
+      <!-- ==================== VIEW 1: TUITION JOB BOARD (TUTOR & PUBLIC) ==================== -->
+      <section id="view-tuition-board" class="view-section active">
+        <!-- Hero Banner -->
+        <div class="hero-banner">
+          <div class="hero-text">
+            <span class="hero-pill">✨ ভেরিফাইড টিউশন প্ল্যাটফর্ম</span>
+            <h1>আপনার পছন্দের টিউশন খুঁজুন অথবা সেরা টিউটর নিয়োগ দিন</h1>
+            <p>
+              টিউটররা সাবস্ক্রিপশন মেম্বারশিপের মাধ্যমে ভেরিফাইড টিউশনগুলোতে সরাসরি আবেদন ও গার্ডিয়ানের সাথে যোগাযোগ করতে পারবেন। আর গার্ডিয়ানরা সম্পূর্ণ ফ্রি-তে টিউশন রিকোয়েস্ট পোস্ট করতে পারবেন!
+            </p>
+            <div class="hero-actions" id="heroActionButtons">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+          <div class="hero-stats-card">
+            <div class="stat-box">
+              <span class="stat-num" id="statTotalTuitions">6</span>
+              <span class="stat-title">অ্যাক্টিভ টিউশন</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-num">১০০%</span>
+              <span class="stat-title">ভেরিফাইড গার্ডিয়ান</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-num" id="statTutorSubStatus">Free</span>
+              <span class="stat-title">আপনার প্ল্যান</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subscription Alert Banner for Tutor -->
+        <div id="tutorSubBanner" class="sub-status-banner"></div>
+
+        <!-- Filter & Search Bar -->
+        <div class="filter-card">
+          <div class="filter-grid">
+            <div class="filter-group">
+              <label>🔍 সার্চ করুন (লোকেশন, সাবজেক্ট, কোড)</label>
+              <input type="text" id="searchQuery" placeholder="যেমন: ধানমন্ডি, ম্যাথ, HSC..." oninput="renderTuitionBoard()" />
+            </div>
+            <div class="filter-group">
+              <label>📍 এরিয়া / লোকেশন</label>
+              <select id="filterLocation" onchange="renderTuitionBoard()">
+                <option value="all">সকল লোকেশন</option>
+                <option value="ধানমন্ডি, ঢাকা">ধানমন্ডি, ঢাকা</option>
+                <option value="মিরপুর, ঢাকা">মিরপুর, ঢাকা</option>
+                <option value="উত্তরা, ঢাকা">উত্তরা, ঢাকা</option>
+                <option value="গুলশান / বনানী, ঢাকা">গুলশান / বনানী, ঢাকা</option>
+                <option value="মোহাম্মদপুর, ঢাকা">মোহাম্মদপুর, ঢাকা</option>
+                <option value="চট্টগ্রাম">চট্টগ্রাম</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>📚 মিডিয়াম / ক্যাটাগরি</label>
+              <select id="filterMedium" onchange="renderTuitionBoard()">
+                <option value="all">সকল মিডিয়াম</option>
+                <option value="বাংলা মিডিয়াম">বাংলা মিডিয়াম</option>
+                <option value="ইংলিশ ভার্সন">ইংলিশ ভার্সন</option>
+                <option value="ইংলিশ মিডিয়াম (O/A Level)">ইংলিশ মিডিয়াম (O/A Level)</option>
+                <option value="অ্যাডমিশন টেস্ট">অ্যাডমিশন টেস্ট</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>👨‍🏫 টিউটর জেন্ডার</label>
+              <select id="filterGender" onchange="renderTuitionBoard()">
+                <option value="all">যেকোনো (Male / Female)</option>
+                <option value="Male">শুধুমাত্র Male টিউটর</option>
+                <option value="Female">শুধুমাত্র Female টিউটর</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tuition List Header -->
+        <div class="section-header">
+          <div>
+            <h2>🔥 সাম্প্রতিক টিউশন রিকোয়েস্টসমূহ</h2>
+            <p class="text-muted">সাবস্ক্রাইব করা টিউটররা সরাসরি গার্ডিয়ানের নম্বর দেখতে ও Apply করতে পারবেন</p>
+          </div>
+          <span class="result-count" id="tuitionCountBadge">0 টি টিউশন পাওয়া গেছে</span>
+        </div>
+
+        <!-- Tuition Cards Grid -->
+        <div class="tuition-grid" id="tuitionCardsContainer"></div>
+      </section>
+
+      <!-- ==================== VIEW 2: SUBSCRIPTION PLANS (TUTOR) ==================== -->
+      <section id="view-subscriptions" class="view-section">
+        <div class="pricing-header">
+          <span class="hero-pill">💎 টিউটর মেম্বারশিপ প্ল্যান</span>
+          <h2>সাবস্ক্রিপশন নিন, আনলিমিটেড টিউশনে Apply করুন</h2>
+          <p>কোনো মিডিয়া কমিশন বা টিউশন পাওয়ার পর ৫০%-৬০% স্যালারি কেটে নেওয়ার ঝামেলা নেই! শুধুমাত্র ছোট একটি সাবস্ক্রিপশন ফি দিয়ে সরাসরি গার্ডিয়ানের সাথে কথা বলুন।</p>
+        </div>
+
+        <!-- Active Subscription Card if subscribed -->
+        <div id="currentPlanSummaryCard"></div>
+
+        <!-- Pricing Cards -->
+        <div class="pricing-grid" id="pricingPlansContainer"></div>
+
+        <!-- Payment History of Tutor -->
+        <div class="card mt-4">
+          <h3>🧾 আপনার পেমেন্ট ও সাবস্ক্রিপশন হিস্ট্রি</h3>
+          <div id="tutorPaymentHistoryContainer" class="table-responsive mt-2"></div>
+        </div>
+      </section>
+
+      <!-- ==================== VIEW 3: TUTOR BIO-DATA & MY APPLICATIONS ==================== -->
+      <section id="view-tutor-dashboard" class="view-section">
+        <!-- Sub-navigation inside Tutor Dashboard -->
+        <div class="biodata-tabs-bar">
+          <button class="bio-tab-btn active" id="tabBtnBioEdit" onclick="switchTutorSubTab('edit-bio')">
+            📝 বায়োডাটা এডিট / যুক্ত করুন (Edit Bio-Data)
+          </button>
+          <button class="bio-tab-btn" id="tabBtnBioPreview" onclick="switchTutorSubTab('preview-bio')">
+            📄 পূর্ণাঙ্গ বায়োডাটা ও সিভি প্রিভিউ (Bio-Data CV View)
+          </button>
+          <button class="bio-tab-btn" id="tabBtnMyApps" onclick="switchTutorSubTab('my-apps')">
+            📋 আমার আবেদনকৃত টিউশনসমূহ (<span id="myAppsCountBadge">0</span>)
+          </button>
+        </div>
+
+        <!-- SUB-TAB 1: COMPLETE BIO-DATA FORM -->
+        <div id="tutorSubTab-edit-bio" class="tutor-subtab active">
+          <div class="card">
+            <div class="section-header">
+              <div>
+                <h3>👨‍🎓 টিউটর পূর্ণাঙ্গ বায়োডাটা ফর্ম (Complete Tutor Bio-Data)</h3>
+                <p class="text-muted">আপনার শিক্ষাগত যোগ্যতা, অভিজ্ঞতা ও ব্যক্তিগত তথ্য পূরণ করুন। গার্ডিয়ানরা আপনার টিউশন আবেদনের সাথে এই সম্পূর্ণ বায়োডাটা দেখতে পাবেন।</p>
+              </div>
+              <div style="display:flex;gap:10px;align-items:center">
+                <span class="result-count" id="bioCompletionBadge">১০০% সম্পন্ন</span>
+                <button type="button" class="btn btn-outline" onclick="switchTutorSubTab('preview-bio')">
+                  👁️ বায়োডাটা প্রিভিউ দেখুন
+                </button>
+              </div>
+            </div>
+
+            <form id="tutorProfileForm" onsubmit="saveTutorProfile(event)">
+              <!-- Part 1: Personal Info -->
+              <div class="bio-section-box">
+                <h4 class="bio-section-title">১. ব্যক্তিগত ও পরিচয় তথ্য (Personal Information)</h4>
+                <div class="form-row-3">
+                  <div class="form-group">
+                    <label>পূর্ণ নাম (Full Name) *</label>
+                    <input type="text" id="inputTutorName" placeholder="যেমন: আরিফুল ইসলাম" required />
+                  </div>
+                  <div class="form-group">
+                    <label>লিঙ্গ (Gender) *</label>
+                    <select id="inputTutorGender" required>
+                      <option value="Male">Male (পুরুষ)</option>
+                      <option value="Female">Female (মহিলা)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>রক্তের গ্রুপ (Blood Group)</label>
+                    <select id="inputTutorBlood">
+                      <option value="O+">O+</option>
+                      <option value="A+">A+</option>
+                      <option value="B+">B+</option>
+                      <option value="AB+">AB+</option>
+                      <option value="O-">O-</option>
+                      <option value="A-">A-</option>
+                      <option value="B-">B-</option>
+                      <option value="AB-">AB-</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-row-3">
+                  <div class="form-group">
+                    <label>মোবাইল নম্বর (সক্রিয়) *</label>
+                    <input type="text" id="inputTutorPhone" placeholder="017XXXXXXXX" required />
+                  </div>
+                  <div class="form-group">
+                    <label>হোয়াটসঅ্যাপ / বিকল্প নম্বর</label>
+                    <input type="text" id="inputTutorWhatsapp" placeholder="017XXXXXXXX" />
+                  </div>
+                  <div class="form-group">
+                    <label>ইমেইল ঠিকানা</label>
+                    <input type="email" id="inputTutorEmail" placeholder="example@email.com" />
+                  </div>
+                </div>
+
+                <div class="form-row-3">
+                  <div class="form-group">
+                    <label>NID / ভার্সিটি স্টুডেন্ট আইডি নম্বর *</label>
+                    <input type="text" id="inputTutorNid" placeholder="যেমন: BUET-ID-1905042" required />
+                  </div>
+                  <div class="form-group">
+                    <label>পিতার নাম ও পেশা</label>
+                    <input type="text" id="inputTutorFather" placeholder="যেমন: রফিকুল ইসলাম (শিক্ষক)" />
+                  </div>
+                  <div class="form-group">
+                    <label>ধর্ম ও জাতীয়তা</label>
+                    <input type="text" id="inputTutorReligion" placeholder="ইসলাম, বাংলাদেশি" />
+                  </div>
+                </div>
+
+                <div class="form-row-2">
+                  <div class="form-group">
+                    <label>বর্তমান ঠিকানা (মেস / হল / বাসা) *</label>
+                    <input type="text" id="inputTutorPresentAddr" placeholder="যেমন: আহসানউল্লাহ হল, বুয়েট, ঢাকা" required />
+                  </div>
+                  <div class="form-group">
+                    <label>স্থায়ী ঠিকানা (জেলা ও থানা)</label>
+                    <input type="text" id="inputTutorPermanentAddr" placeholder="যেমন: সদর, কুমিল্লা" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Part 2: Educational Qualifications (University, HSC, SSC) -->
+              <div class="bio-section-box">
+                <h4 class="bio-section-title">২. শিক্ষাগত যোগ্যতা (Educational Qualifications)</h4>
+
+                <!-- Honours / University -->
+                <div class="edu-subcard">
+                  <strong>🎓 স্নাতক / বিশ্ববিদ্যালয় পর্যায় (Honours / B.Sc / B.B.A / MBBS)</strong>
+                  <div class="form-row-3 mt-2">
+                    <div class="form-group">
+                      <label>বিশ্ববিদ্যালয় / প্রতিষ্ঠানের নাম *</label>
+                      <input type="text" id="inputTutorUni" placeholder="যেমন: BUET / Dhaka University" required />
+                    </div>
+                    <div class="form-group">
+                      <label>ডিপার্টমেন্ট / বিষয় (Major) *</label>
+                      <input type="text" id="inputTutorDept" placeholder="যেমন: Computer Science & Engineering (CSE)" required />
+                    </div>
+                    <div class="form-group">
+                      <label>বর্তমান বর্ষ / সেমিস্টার ও সিজিপিএ *</label>
+                      <input type="text" id="inputTutorYearCgpa" placeholder="যেমন: 4th Year (CGPA 3.78)" required />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- HSC / A-Level -->
+                <div class="edu-subcard mt-2">
+                  <strong>🏛️ এইচএসসি / সমমান (HSC / A-Level)</strong>
+                  <div class="form-row-3 mt-2">
+                    <div class="form-group">
+                      <label>কলেজের নাম *</label>
+                      <input type="text" id="inputTutorHscCollege" placeholder="যেমন: নটর ডেম কলেজ, ঢাকা" required />
+                    </div>
+                    <div class="form-group">
+                      <label>গ্রুপ ও বোর্ড *</label>
+                      <input type="text" id="inputTutorHscGroup" placeholder="যেমন: Science (Dhaka Board)" required />
+                    </div>
+                    <div class="form-group">
+                      <label>পাশের সন ও ফলাফল (GPA) *</label>
+                      <input type="text" id="inputTutorHscResult" placeholder="যেমন: 2021 — GPA 5.00 (Golden)" required />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- SSC / O-Level -->
+                <div class="edu-subcard mt-2">
+                  <strong>🏫 এসএসসি / সমমান (SSC / O-Level)</strong>
+                  <div class="form-row-3 mt-2">
+                    <div class="form-group">
+                      <label>স্কুলের নাম *</label>
+                      <input type="text" id="inputTutorSscSchool" placeholder="যেমন: মতিঝিল আইডিয়াল স্কুল অ্যান্ড কলেজ" required />
+                    </div>
+                    <div class="form-group">
+                      <label>গ্রুপ ও বোর্ড *</label>
+                      <input type="text" id="inputTutorSscGroup" placeholder="যেমন: Science (Dhaka Board)" required />
+                    </div>
+                    <div class="form-group">
+                      <label>পাশের সন ও ফলাফল (GPA) *</label>
+                      <input type="text" id="inputTutorSscResult" placeholder="যেমন: 2019 — GPA 5.00 (Golden)" required />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Part 3: Tuition Preferences & Experience -->
+              <div class="bio-section-box">
+                <h4 class="bio-section-title">৩. টিউশন প্রিফারেন্স ও অভিজ্ঞতা (Tuition Details & Experience)</h4>
+                <div class="form-row-3">
+                  <div class="form-group">
+                    <label>টিউশন অভিজ্ঞতা (Years of Experience) *</label>
+                    <input type="text" id="inputTutorExp" placeholder="যেমন: ৩ বছর (SSC, HSC ও Admission)" required />
+                  </div>
+                  <div class="form-group">
+                    <label>পড়াতে ইচ্ছুক মিডিয়াম *</label>
+                    <input type="text" id="inputTutorMediums" placeholder="যেমন: বাংলা মিডিয়াম, ইংলিশ ভার্সন" required />
+                  </div>
+                  <div class="form-group">
+                    <label>প্রত্যাশিত সর্বনিম্ন মাসিক সম্মানী (BDT) *</label>
+                    <input type="number" id="inputTutorMinSalary" placeholder="যেমন: 6000" required />
+                  </div>
+                </div>
+
+                <div class="form-row-2">
+                  <div class="form-group">
+                    <label>পছন্দের ক্লাসসমূহ (Preferred Classes) *</label>
+                    <input type="text" id="inputTutorClasses" placeholder="যেমন: Class 8, SSC, HSC 1st & 2nd Year, Engineering Admission" required />
+                  </div>
+                  <div class="form-group">
+                    <label>পছন্দের বিষয়সমূহ (Preferred Subjects) *</label>
+                    <input type="text" id="inputTutorSubjects" placeholder="যেমন: Higher Math, Physics, Chemistry, ICT" required />
+                  </div>
+                </div>
+
+                <div class="form-row-2">
+                  <div class="form-group">
+                    <label>পছন্দের এলাকা / লোকেশনসমূহ (Preferred Locations) *</label>
+                    <input type="text" id="inputTutorLocations" placeholder="যেমন: ধানমন্ডি, কলাবাগান, আজিমপুর, শাহবাগ, ফার্মগেট" required />
+                  </div>
+                  <div class="form-group">
+                    <label>পড়ানোর সময় ও সপ্তাহে কত দিন (Availability)</label>
+                    <input type="text" id="inputTutorAvailability" placeholder="যেমন: সপ্তাহে ৩-৪ দিন (বিকেল ৪টা - রাত ৯টা)" />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>নিজের সম্পর্কে ও পড়ানোর কৌশল (Bio / Teaching Approach & Achievements) *</label>
+                  <textarea id="inputTutorBioText" rows="3" placeholder="আপনার পড়ানোর ধরন, পূর্বের স্টুডেন্টদের সফলতা বা বিশেষ কোনো অর্জন লিখুন..." required></textarea>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:12px;flex-wrap:wrap">
+                <button type="submit" class="btn btn-primary btn-lg">
+                  💾 সম্পূর্ণ বায়োডাটা সেভ ও আপডেট করুন
+                </button>
+                <button type="button" class="btn btn-emerald btn-lg" onclick="switchTutorSubTab('preview-bio')">
+                  📄 বায়োডাটা সিভি প্রিভিউ দেখুন
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 2: FULL BIO-DATA CV PREVIEW -->
+        <div id="tutorSubTab-preview-bio" class="tutor-subtab">
+          <div class="card" id="tutorBiodataCvCard">
+            <!-- Dynamically rendered rich CV / Bio-data sheet -->
+          </div>
+        </div>
+
+        <!-- SUB-TAB 3: MY APPLICATIONS -->
+        <div id="tutorSubTab-my-apps" class="tutor-subtab">
+          <div class="card">
+            <div class="section-header">
+              <div>
+                <h3>📋 আমার আবেদনকৃত টিউশনসমূহ (My Applications)</h3>
+                <p class="text-muted">আপনি যেসব টিউশনে Apply করেছেন সেগুলোর বর্তমান অবস্থা ও গার্ডিয়ানের কন্টাক্ট</p>
+              </div>
+            </div>
+            <div id="tutorApplicationsList" class="applications-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== VIEW 4: GUARDIAN POST TUITION & MANAGE ==================== -->
+      <section id="view-guardian-portal" class="view-section">
+        <div class="guardian-grid">
+          <!-- Post New Tuition Form -->
+          <div class="card">
+            <div class="card-header-accent">
+              <h3>📢 নতুন টিউশন রিকোয়েস্ট পোস্ট করুন (সম্পূর্ণ ফ্রি)</h3>
+              <p>ফর্মটি পূরণ করলে ভেরিফাইড ও সাবস্ক্রাইবড টিউটররা আপনার টিউশনে আবেদন করতে পারবেন।</p>
+            </div>
+            <form id="postTuitionForm" onsubmit="submitNewTuition(event)">
+              <div class="form-group">
+                <label>টিউশন টাইটেল *</label>
+                <input type="text" id="postTitle" placeholder="যেমন: HSC 1st Year স্টুডেন্টের জন্য Physics ও Math টিউটর প্রয়োজন" required />
+              </div>
+
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label>ক্লাস / লেভেল *</label>
+                  <select id="postClass" required>
+                    <option value="Class 5 - 8">Class 5 - 8</option>
+                    <option value="Class 9 - 10 (SSC)" selected>Class 9 - 10 (SSC)</option>
+                    <option value="HSC 1st / 2nd Year">HSC 1st / 2nd Year</option>
+                    <option value="O Level / A Level">O Level / A Level</option>
+                    <option value="University Admission">University Admission</option>
+                    <option value="Class 1 - 4">Class 1 - 4</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>মিডিয়াম *</label>
+                  <select id="postMedium" required>
+                    <option value="বাংলা মিডিয়াম">বাংলা মিডিয়াম</option>
+                    <option value="ইংলিশ ভার্সন">ইংলিশ ভার্সন</option>
+                    <option value="ইংলিশ মিডিয়াম (O/A Level)">ইংলিশ মিডিয়াম (O/A Level)</option>
+                    <option value="অ্যাডমিশন টেস্ট">অ্যাডমিশন টেস্ট</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>পড়ানোর বিষয়সমূহ (Subjects - কমা দিয়ে লিখুন) *</label>
+                <input type="text" id="postSubjects" placeholder="যেমন: Higher Math, Physics, Chemistry" required />
+              </div>
+
+              <div class="form-row-3">
+                <div class="form-group">
+                  <label>মাসিক সম্মানী (Salary BDT) *</label>
+                  <input type="number" id="postSalary" placeholder="যেমন: 6000" min="1000" required />
+                </div>
+                <div class="form-group">
+                  <label>সপ্তাহে কত দিন? *</label>
+                  <select id="postDays" required>
+                    <option value="৩ দিন/সপ্তাহ">৩ দিন/সপ্তাহ</option>
+                    <option value="৪ দিন/সপ্তাহ" selected>৪ দিন/সপ্তাহ</option>
+                    <option value="৫ দিন/সপ্তাহ">৫ দিন/সপ্তাহ</option>
+                    <option value="৬ দিন/সপ্তাহ">৬ দিন/সপ্তাহ</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>পছন্দের টিউটর *</label>
+                  <select id="postGender" required>
+                    <option value="Any">যেকোনো (Male/Female)</option>
+                    <option value="Male">Male Tutor</option>
+                    <option value="Female">Female Tutor</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label>এরিয়া / এলাকা *</label>
+                  <select id="postLocation" required>
+                    <option value="ধানমন্ডি, ঢাকা">ধানমন্ডি, ঢাকা</option>
+                    <option value="মিরপুর, ঢাকা">মিরপুর, ঢাকা</option>
+                    <option value="উত্তরা, ঢাকা">উত্তরা, ঢাকা</option>
+                    <option value="গুলশান / বনানী, ঢাকা">গুলশান / বনানী, ঢাকা</option>
+                    <option value="মোহাম্মদপুর, ঢাকা">মোহাম্মদপুর, ঢাকা</option>
+                    <option value="চট্টগ্রাম">চট্টগ্রাম</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>বিস্তারিত ঠিকানা (বাসা/রোড নম্বর) *</label>
+                  <input type="text" id="postAddress" placeholder="যেমন: রোড ৯/এ, ধানমন্ডি" required />
+                </div>
+              </div>
+
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label>গার্ডিয়ান / স্টুডেন্টের নাম *</label>
+                  <input type="text" id="postGuardianName" value="মাহমুদুল হাসান (অভিভাবক)" required />
+                </div>
+                <div class="form-group">
+                  <label>যোগাযোগের মোবাইল নম্বর *</label>
+                  <input type="text" id="postGuardianPhone" value="01711-987654" required />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>বিশেষ রিকোয়ারমেন্ট (ঐচ্ছিক)</label>
+                <textarea id="postNote" rows="2" placeholder="যেমন: পাবলিক বিশ্ববিদ্যালয়ের অভিজ্ঞ টিউটর অগ্রাধিকার পাবে, বিকেল ৫টার পর পড়াতে হবে।"></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-lg btn-block">
+                🚀 টিউশন রিকোয়েস্ট পাবলিশ করুন
+              </button>
+            </form>
+          </div>
+
+          <!-- Guardian's Posted Tuitions & Applicants -->
+          <div>
+            <div class="card">
+              <div class="section-header">
+                <div>
+                  <h3>📂 আপনার পোস্ট করা টিউশন ও আবেদনকারী টিউটর</h3>
+                  <p class="text-muted">কোন কোন টিউটর আপনার টিউশনে Apply করেছেন তা নিচে দেখুন ও Shortlist/Hire করুন</p>
+                </div>
+              </div>
+              <div id="guardianPostsContainer"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== VIEW 5: ADMIN PANEL ==================== -->
+      <section id="view-admin-panel" class="view-section">
+        <div class="section-header">
+          <div>
+            <h2>🛡️ অ্যাডমিন কন্ট্রোল প্যানেল (Admin Dashboard)</h2>
+            <p class="text-muted">টিউটরদের সাবস্ক্রিপশন পেমেন্ট ভেরিফিকেশন এবং গার্ডিয়ানদের টিউশন পোস্ট ম্যানেজমেন্ট</p>
+          </div>
+          <button class="btn btn-outline" onclick="resetDemoData()">🔄 ডেমো ডেটা রিসেট করুন</button>
+        </div>
+
+        <!-- Admin KPI Cards -->
+        <div class="kpi-grid" id="adminKpiContainer"></div>
+
+        <!-- Pending & All Subscription Payments -->
+        <div class="card mt-4">
+          <div class="section-header">
+            <div>
+              <h3>💳 টিউটর সাবস্ক্রিপশন পেমেন্ট রিকোয়েস্ট (bKash / Nagad / SSLCommerz)</h3>
+              <p class="text-muted">টিউটররা ম্যানুয়াল TrxID দিয়ে পেমেন্ট করলে এখান থেকে Approve করলে সাথে সাথে তাদের সাবস্ক্রিপশন চালু হয়ে যাবে।</p>
+            </div>
+          </div>
+          <div id="adminPaymentsTableContainer" class="table-responsive"></div>
+        </div>
+
+        <!-- Manage All Tuition Requests -->
+        <div class="card mt-4">
+          <div class="section-header">
+            <div>
+              <h3>📚 সকল টিউশন পোস্ট ম্যানেজমেন্ট</h3>
+              <p class="text-muted">গার্ডিয়ানদের পোস্ট করা টিউশন অ্যাপ্রুভ বা ডিলিট করুন</p>
+            </div>
+          </div>
+          <div id="adminTuitionsTableContainer" class="table-responsive"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Navigation Bar for Mobile App Experience -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+      <!-- Populated dynamically -->
+    </nav>
+  </div>
+
+  <!-- ==================== MODAL 1: SUBSCRIPTION CHECKOUT / LOCK PROMPT ==================== -->
+  <div class="modal-backdrop" id="paymentModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="paymentModalTitle">💎 সাবস্ক্রিপশন অ্যাক্টিভ করুন</h3>
+        <button class="modal-close" onclick="closeModal('paymentModal')">&times;</button>
+      </div>
+      <div class="modal-body" id="paymentModalBody">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: APPLY TO TUITION MODAL ==================== -->
+  <div class="modal-backdrop" id="applyModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>✉️ টিউশনে আবেদন করুন (Apply for Tuition)</h3>
+        <button class="modal-close" onclick="closeModal('applyModal')">&times;</button>
+      </div>
+      <div class="modal-body" id="applyModalBody">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 3: TUTOR FULL BIO-DATA VIEWER MODAL ==================== -->
+  <div class="modal-backdrop" id="biodataModal">
+    <div class="modal-content" style="max-width: 760px;">
+      <div class="modal-header">
+        <h3>📄 টিউটরের সম্পূর্ণ বায়োডাটা (Complete Tutor Bio-Data)</h3>
+        <button class="modal-close" onclick="closeModal('biodataModal')">&times;</button>
+      </div>
+      <div class="modal-body" id="biodataModalBody">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 4: OTP LOGIN / REGISTRATION MODAL ==================== -->
+  <div class="modal-backdrop" id="authModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🔑 অ্যাকাউন্ট লগইন / রেজিস্ট্রেশন (SMS OTP)</h3>
+        <button class="modal-close" onclick="closeModal('authModal')">&times;</button>
+      </div>
+      <div class="modal-body" id="authModalBody">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+
